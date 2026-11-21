@@ -17,7 +17,7 @@ Nested AI is the current repository name for the OmniPath multi-agent platform. 
 
 The restored V6.6 source commit is `10b80b695cbe9189f763870b7cc9ad81d103051e`. CI repairs were applied in `dbf32ef188eb32188425c71fd634d37c1a20a2fc`. The original recovered state remains on `recovery/hetzner-v6.6-staging`; the pre-rollback history is retained on `archive/pre-v6.6-rollback-main-2026-11-21`.
 
-See [recovery and verification status](docs/RECOVERY_STATUS.md) before relying on historical claims.
+See [recovery and verification status](docs/RECOVERY_STATUS.md) before relying on historical claims. Follow the [full readiness plan](docs/READINESS_PLAN.md) for the November 21–22 operational gates and subsequent development phases.
 
 ## Start locally
 
