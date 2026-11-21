@@ -73,3 +73,11 @@
 **P1:** Implement the evidence registry and cross-component consistency probes for R3 after operational truth exists.
 
 **Decision:** R1 = PARTIAL; R2 = UNVERIFIED; R3 = NOT ESTABLISHED. No production GO is warranted from the evidence collected here.
+
+## Follow-up: CI verification repair (2026-11-21)
+
+Commit `d99afc0fc04c562fa4a8704e15bc2f5387a311c3` updates `.github/workflows/tests.yml` to remove permissive exit handling from mypy, Bandit, Safety, and integration tests. It also uses the supported Safety output format, raises the integration timeout to twenty minutes, and uploads coverage as a GitHub Actions artifact rather than relying on a tokenless Codecov upload.
+
+**Status: SOURCE CHANGE APPLIED, NEW CI RESULT NOT YET VERIFIED.** The next workflow must be inspected for real mypy errors, the complete Bandit inventory, Safety findings, and integration test failures. A newly red CI is expected if previously concealed defects remain; do not revert these gates merely to regain green status.
+
+**Outstanding:** Docker/Trivy currently permits vulnerability findings without failing its job. Review and enforce an explicit severity and exception policy after collecting full scan evidence. Runtime staging and mission proofs remain unverified.
