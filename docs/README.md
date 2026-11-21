@@ -4,6 +4,7 @@ This is the documentation entry point for the **V6.6 recovery baseline** of the 
 
 ## Current orientation
 
+- [Full readiness plan](READINESS_PLAN.md) — November 21–22 operational checkpoint, readiness gates, evidence requirements, and advancement toward recursive verification.
 - [Recovery and verification status](RECOVERY_STATUS.md) — baseline commits, what has been verified, and outstanding runtime risks.
 - [Repository README](../README.md) — current project identity, setup, and navigation.
 - [Testing guide](TESTING_GUIDE.md) — test commands; historical version labels and examples require source verification.
