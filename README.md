@@ -1,157 +1,62 @@
-# OmniPath v2
+# Nested AI
 
-**A Production-Grade, Multi-Agent AI Platform**
+**Restored OmniPath V6.6 codebase · 1DevTeam**
 
----
+Nested AI is the current repository name for the OmniPath multi-agent platform. The recovered codebase reports **version 6.6.0** in `VERSION`. Earlier names such as OmniPath and Citadel remain in source identifiers, deployment resources, and historical documents; those names do not imply separate running systems.
 
-OmniPath is an open, extensible, and observable platform for building, deploying, and managing fleets of autonomous AI agents. It provides the complete infrastructure necessary for production-grade agentic systems, from event-driven architecture and enterprise-grade governance to a comprehensive observability stack.
+## What is in the repository
 
-This is not a toy framework. It is a complete, working system built with the same patterns used by large-scale distributed applications, ready for deployment on a single server or a Kubernetes cluster.
+- A FastAPI backend with agent, mission, governance, economy, scheduling, and integration modules.
+- PostgreSQL models, Redis integration, NATS messaging, event-sourcing/CQRS components, and saga orchestration.
+- Docker Compose configurations for staging and production, Kubernetes manifests, and monitoring configuration.
+- Tests and GitHub Actions workflows for CI and automatic versioning.
 
-| | |
-|---|---|
-| **Version** | `5.0.0` |
-| **CI Status** | ✅ Passing |
-| **Test Coverage** | 37% (679 tests) |
-| **License** | Proprietary |
+**Implementation is not deployment proof.** The presence of a module, manifest, or test does not establish that a live service or end-to-end mission has been verified. In particular, the V6.6 mission API schedules execution using FastAPI background tasks; it is not documented here as a durable, independently recoverable mission worker.
 
----
+## Recovery baseline
 
-## Core Features
+The restored V6.6 source commit is `10b80b695cbe9189f763870b7cc9ad81d103051e`. CI repairs were applied in `dbf32ef188eb32188425c71fd634d37c1a20a2fc`. The original recovered state remains on `recovery/hetzner-v6.6-staging`; the pre-rollback history is retained on `archive/pre-v6.6-rollback-main-2026-11-21`.
 
-OmniPath is built on a foundation of production-ready architectural patterns:
+See [recovery and verification status](docs/RECOVERY_STATUS.md) before relying on historical claims.
 
--   **Event-Driven Architecture**: At its core, OmniPath uses a **NATS.io** event bus for asynchronous, decoupled communication between all components. This enables high scalability and resilience.
+## Start locally
 
--   **Event Sourcing & CQRS**: Agent and mission states are not just stored; they are modeled as an immutable sequence of events. This provides a complete audit trail, enables state reconstruction, and separates read/write workloads for performance.
-
--   **Saga Orchestration**: Manages complex, multi-step operations across agents and services with automated compensation for failures, ensuring data consistency in a distributed environment.
-
--   **Comprehensive Governance**: A powerful, policy-driven governance engine provides fine-grained control over agent behavior, resource access, and compliance. Features include:
-    -   **Risk-Based Pricing**: High-risk operations automatically incur higher costs.
-    -   **Approval Workflows**: Multi-level approval queues for sensitive actions.
-    -   **Immutable Audit Trails**: Complete, tamper-proof logs of all system activity.
-
--   **Full-Stack Observability**: The entire platform is instrumented for deep visibility.
-    -   **Distributed Tracing** with OpenTelemetry and Jaeger.
-    -   **Metrics** with Prometheus.
-    -   **Dashboards** with Grafana for system health, API performance, and governance.
-
--   **Multi-LLM Strategy**: Flexibly route tasks to the best model for the job (e.g., GPT-4 for reasoning, Claude 3.5 for safety, Gemini for speed) via a centralized `LLMService`.
-
----
-
-## Technology Stack
-
-| Category | Technology | Purpose |
-|---|---|---|
-| **Web Framework** | FastAPI | High-performance asynchronous API |
-| **Database** | PostgreSQL 15+ | Primary data store, event store |
-| **Messaging** | NATS.io | Event bus for inter-service communication |
-| **Caching** | Redis | Session data, read model snapshots |
-| **Observability** | OpenTelemetry, Prometheus, Jaeger, Grafana | Tracing, metrics, and dashboards |
-| **Containerization**| Docker, Kubernetes | Scalable and resilient deployment |
-| **Authentication** | JWT with RBAC | Secure, role-based access control |
-
----
-
-## Quick Start
-
-This project uses Docker Compose to set up a complete local development environment.
-
-### Prerequisites
-
--   Docker and Docker Compose
--   Git
-
-### 1. Clone the Repository
+Prerequisites: Git, Docker with the Compose plugin, and deployment credentials.
 
 ```bash
-git clone <your-repo-url>
-cd omnipath_v2
-```
-
-### 2. Configure Environment
-
-Copy the example environment file. **This is the only file you need to edit.**
-
-```bash
+git clone https://github.com/1devteam/nested-ai.git
+cd nested-ai
 cp .env.example .env
 ```
 
-Now, edit the `.env` file to add your API keys and generate security secrets. At a minimum, you need:
-
-```env
-# Generate these two secrets
-SECRET_KEY=your_32_character_random_string
-JWT_SECRET_KEY=your_32_character_random_string
-
-# Add your OpenAI API key (required for core agents)
-OPENAI_API_KEY=sk-...
-```
-
-### 3. Launch the Stack
-
-Build and run all services using the production Docker Compose file.
+Set strong, unique secrets in `.env` and review the selected Compose file before starting services. **Do not deploy the development defaults unchanged.** The staging configuration requires additional credentials (including database, Redis, NATS, Grafana, and application secrets) and assumes an externally provisioned TLS/Nginx environment.
 
 ```bash
-docker-compose -f docker-compose.production.yml up --build -d
+docker compose -f docker-compose.staging.yml config
+docker compose -f docker-compose.staging.yml up --build -d
+docker compose -f docker-compose.staging.yml ps
 ```
 
-This command will start the entire OmniPath stack, including the backend, database, event bus, and full observability suite.
+This is a configuration and launch procedure, **not** a claim that the stack has been successfully deployed or smoke-tested. See [deployment runbook](docs/ops_runbooks/01-deployment.md) for the historical procedure and [recovery status](docs/RECOVERY_STATUS.md) for current cautions.
 
-### 4. Access Services
+## Development and testing
 
--   **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
--   **Grafana Dashboards**: [http://localhost:3000](http://localhost:3000) (user: `admin`, pass: `changeme`)
--   **Jaeger Tracing**: [http://localhost:16686](http://localhost:16686)
--   **NATS Monitoring**: [http://localhost:8222](http://localhost:8222)
--   **Prometheus**: [http://localhost:9090](http://localhost:9090)
-
-### 5. Run Database Migrations
-
-Once the backend is running, apply the initial database schema.
+Use a Python 3.11 environment with the dependencies in `requirements.txt`.
 
 ```bash
-docker-compose -f docker-compose.production.yml exec backend alembic upgrade head
+python -m pip install -r requirements.txt
+./run_tests.sh --unit-only
+./run_tests.sh --integration-only
 ```
 
-Your OmniPath instance is now fully operational.
+Integration tests may require running services and credentials. See [testing guide](docs/TESTING_GUIDE.md). The GitHub workflows are `.github/workflows/tests.yml` and `.github/workflows/auto-version.yml`. Do not interpret a successful lint check as end-to-end runtime verification.
 
----
+## Documentation
 
-## Project Structure
+Start with the [documentation index](docs/README.md), including the [architecture history](docs/ARCHITECTURE.md), [developer guide](docs/developer_guide/README.md), [user guide](docs/user_guide/README.md), and [operations runbooks](docs/ops_runbooks/README.md). Older version-specific documents are retained as historical design records, not automatically as current operational truth.
 
-```
-/omnipath_v2
-├── backend/                # Main application source code
-│   ├── api/                # FastAPI routes and endpoints
-│   ├── agents/             # Core agent implementations and factory
-│   ├── core/               # Foundational patterns (CQRS, Event Sourcing, Saga)
-│   ├── database/           # SQLAlchemy models and repositories
-│   ├── economy/            # Governance-based economy logic
-│   ├── integrations/       # 3rd-party services (LLM, MCP, Observability)
-│   ├── middleware/         # Auth, rate limiting, security headers
-│   ├── models/             # Pydantic domain models
-│   ├── orchestration/      # Mission execution logic
-│   └── main.py             # Application entry point
-├── docs/                   # Detailed architecture and design documents
-├── k8s/                    # Kubernetes deployment manifests
-├── monitoring/             # Prometheus, Grafana, and Nginx configurations
-├── scripts/                # Utility and operational scripts
-├── tests/                  # Unit, integration, and performance tests (670+)
-├── .env.example            # Template for environment variables
-├── docker-compose.production.yml # Production-ready Docker Compose stack
-├── Dockerfile.production   # Hardened production Docker image
-└── README.md               # This file
-```
+## Security and licensing
 
----
+Never commit `.env`, API keys, tokens, or production credentials. Review authentication, authorization, network exposure, and service configuration before deployment.
 
-## Contributing
-
-Contributions are welcome. Please open an issue to discuss your proposed changes before submitting a pull request.
-
-## License
-
-This project is proprietary and confidential. Unauthorized use, copying, or distribution is strictly prohibited.
+The existing repository documentation describes the project as **proprietary**; no open-source license grant is asserted here.
