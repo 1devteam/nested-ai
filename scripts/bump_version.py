@@ -30,11 +30,8 @@ CHANGELOG_FILE = REPO_ROOT / "CHANGELOG.md"
 COMPOSE_FILE = REPO_ROOT / "docker-compose.staging.yml"
 
 MAJOR_PATTERNS = [
-    r"^feat!:",
-    r"^fix!:",
-    r"^refactor!:",
-    r"BREAKING CHANGE",
-    r"BREAKING-CHANGE",
+    r"^[a-z]+(?:\([^\n)]+\))?!:",
+    r"^BREAKING[ -]CHANGE: .+",
 ]
 MINOR_PATTERNS = [
     r"^feat:",
@@ -58,16 +55,16 @@ NO_BUMP_PATTERNS = [
     r"^build:",
     r"^merge:",
     r"^\[skip",
+    r"^fix\(ci\):",
 ]
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def run(cmd: str, check: bool = True) -> str:
     """Run a shell command and return stdout."""
-    result = subprocess.run(
-        cmd, shell=True, capture_output=True, text=True, cwd=REPO_ROOT
-    )
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=REPO_ROOT)
     if check and result.returncode != 0:
         print(f"ERROR running: {cmd}")
         print(f"  stderr: {result.stderr.strip()}")
@@ -93,8 +90,11 @@ def write_version(major: int, minor: int, patch: int) -> None:
 def get_last_tag() -> str | None:
     """Get the most recent version tag, or None if no tags exist."""
     result = subprocess.run(
-        "git tag --sort=-version:refname",
-        shell=True, capture_output=True, text=True, cwd=REPO_ROOT
+        "git tag --merged HEAD --sort=-version:refname",
+        shell=True,
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
     )
     tags = [t.strip() for t in result.stdout.strip().splitlines() if t.strip()]
     version_tags = [t for t in tags if re.match(r"^v\d+\.\d+\.\d+$", t)]
@@ -108,10 +108,7 @@ def get_commits_since(ref: str | None) -> list[dict]:
     else:
         log_range = "HEAD"
 
-    raw = run(
-        f'git log {log_range} --pretty=format:"%H|||%s|||%b|||END"',
-        check=False
-    )
+    raw = run(f'git log {log_range} --pretty=format:"%H|||%s|||%b|||END"')
     if not raw:
         return []
 
@@ -144,6 +141,8 @@ def classify_commits(commits: list[dict]) -> tuple[str, list[dict], list[dict], 
 
         if any(re.search(p, text, re.MULTILINE) for p in MAJOR_PATTERNS):
             major_commits.append(commit)
+        elif any(re.search(p, commit["subject"]) for p in NO_BUMP_PATTERNS):
+            continue
         elif any(re.search(p, commit["subject"]) for p in MINOR_PATTERNS):
             minor_commits.append(commit)
         elif any(re.search(p, commit["subject"]) for p in PATCH_PATTERNS):
@@ -211,11 +210,7 @@ def update_compose_version(new_version: str) -> None:
         return
 
     content = COMPOSE_FILE.read_text()
-    updated = re.sub(
-        r"(APP_VERSION:\s*)\S+",
-        f"\\g<1>{new_version}",
-        content
-    )
+    updated = re.sub(r"(APP_VERSION:\s*)\S+", f"\\g<1>{new_version}", content)
     if updated == content:
         print(f"  WARNING: APP_VERSION not found in {COMPOSE_FILE}")
     else:
@@ -223,6 +218,7 @@ def update_compose_version(new_version: str) -> None:
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+
 
 def main() -> None:
     print("=" * 60)
@@ -293,8 +289,7 @@ def main() -> None:
     print(f"  ✓ Tagged {tag_name}")
 
     # 9. Push commit + tag
-    run("git push origin main")
-    run(f"git push origin {tag_name}")
+    run(f"git push --atomic origin HEAD:refs/heads/main refs/tags/{tag_name}")
     print(f"  ✓ Pushed to GitHub")
 
     print(f"\n{'=' * 60}")
